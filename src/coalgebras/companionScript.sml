@@ -779,7 +779,14 @@ Proof
   rw[bottom_def, set_companion, function_def, gfp_poset_gfp]
 QED
 
-(* pull f out of tX *)
+(* useful for irule to restore SUBSET *)
+Theorem singleton_subset:
+  {x} SUBSET y ==> x IN y
+Proof
+  rw[]
+QED
+
+(* pull arbitrary f out of tX, TODO use with second order companion *)
 Theorem set_param_coind_upto_f:
   monotone b /\
   (!X. f X SUBSET set_companion b X) /\
@@ -790,6 +797,20 @@ Proof
   drule_at_then Any irule param_coind_upto_f >> rw[] >>
   qexistsl_tac [‘b’, ‘UNIV’] >>
   rw[set_companion, function_def]
+QED
+
+(* more common usage *)
+Theorem set_param_coind_upto:
+  monotone b /\
+  set_compatible b f /\
+  Y SUBSET f (set_companion b X)
+  ==> Y SUBSET set_companion b X
+Proof
+  rw[] >>
+  drule_then irule set_param_coind_upto_f >>
+  qexists_tac ‘f’ >> rw[] >>
+  drule_then irule set_compatible_enhance >>
+  metis_tac[SUBSET_REFL]
 QED
 
 (* conclude: X is a safe deduction from Y *)

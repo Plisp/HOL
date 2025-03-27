@@ -831,7 +831,7 @@ Proof
   metis_tac[itree_wbisim_cases]
 QED
 
-Theorem itree_wbisim_refl:
+Theorem itree_wbisim_refl[simp]:
   itree_wbisim t (t:('a,'b,'c) itree)
 Proof
   ‘!t:('a,'b,'c) itree t'. t = t' ==> itree_wbisim t t'’
@@ -917,17 +917,17 @@ QED
 (* more compositional variant using the enhanced functional (bt) *)
 (* proof: x < gfp \/ btx < b(K gfp \/ t)x < btx *)
 Theorem itree_wbisim_coind_upto':
-  !R. rel_to_reln R SUBSET
+  !R. R SUBSET
         rel_to_reln itree_wbisim UNION
-        wbisim_functional (set_companion wbisim_functional (rel_to_reln R))
-      ==> rel_to_reln R SUBSET rel_to_reln itree_wbisim
+        wbisim_functional (set_companion wbisim_functional R)
+      ==> R SUBSET rel_to_reln itree_wbisim
 Proof
   rw[] >>
   fs[Once $ GSYM wbisim_functional_gfp] >>
   irule set_companion_coinduct >> rw[] >>
   drule_then irule SUBSET_TRANS >>
   dep_rewrite.DEP_ONCE_REWRITE_TAC [GSYM $ cj 1 gfp_greatest_fixedpoint] >> rw[] >>
-  ‘gfp wbisim_functional SUBSET set_companion wbisim_functional (rel_to_reln R)’
+  ‘gfp wbisim_functional SUBSET set_companion wbisim_functional R’
     suffices_by metis_tac[monotone_def, wbisim_functional_mono] >>
   rw[set_gfp_sub_companion]
 QED
@@ -1016,13 +1016,6 @@ Proof
   metis_tac[itree_wbisim_strip_tau_Vis,
             itree_wbisim_strip_tau_Ret,
             itree_wbisim_sym]
-QED
-
-(* common bind base case *)
-Theorem itree_bind_ret_inv:
-  itree_bind t k = Ret r ==> ?r'. t = Ret r' /\ (k r') = Ret r
-Proof
-  Cases_on ‘t’ >> fs[itree_bind_thm]
 QED
 
 (* combinators respect weak bisimilarity *)
@@ -1231,39 +1224,40 @@ Inductive after_taus:
   (after_taus R x y ==> after_taus R x (Tau y))
 End
 
-Definition upto_taus_func_def:
-  upto_taus_func R = R UNION rel_to_reln (after_taus (reln_to_rel R))
+Definition after_taus_func_def:
+  after_taus_func R = rel_to_reln (after_taus (reln_to_rel R))
 End
 
-Theorem upto_taus_compatible:
-  set_compatible wbisim_functional upto_taus_func
+Theorem in_after_taus_func:
+  (a,b) ∈ after_taus_func X ⇔ after_taus (λx y. (x,y) ∈ X) a b
 Proof
-  rw[set_compatible_def, wbisim_functional_def, upto_taus_func_def, monotone_def] >-
-   (metis_tac[SUBSET_TRANS, SUBSET_UNION]) >-
+  rw[after_taus_func_def, in_rel_to_reln, reln_to_rel_def]
+QED
+
+Theorem after_taus_compatible[simp]:
+  set_compatible wbisim_functional after_taus_func
+Proof
+  rw[set_compatible_def, wbisim_functional_def, after_taus_func_def, monotone_def] >-
    (irule SUBSET_TRANS >>
     qexists_tac ‘rel_to_reln (after_taus (reln_to_rel Y))’ >>
     simp[SUBSET_DEF, in_rel_to_reln] >>
     Cases >> simp[] >>
     Induct_on ‘after_taus’ >> rw[] >>
     rw[Once after_taus_cases] >>
-    metis_tac[SUBSET_DEF]) >-
-   (metis_tac[SUBSET_TRANS, SUBSET_UNION]) >-
-   (rw[SUBSET_DEF, IN_DEF] >> metis_tac[]) >-
-   (rw[SUBSET_DEF, IN_DEF] >> metis_tac[]) >>
-  simp[SUBSET_DEF, rel_to_reln_def] >>
-  Induct_on ‘after_taus’ >>
-  fs[wbisim_functional_def] >>
-  metis_tac[after_taus_cases, reln_to_rel_app]
+    metis_tac[SUBSET_DEF]) >>
+  rw[SUBSET_DEF, in_rel_to_reln] >>
+  Cases_on ‘x’ >> fs[] >>
+  pop_assum mp_tac >>
+  Induct_on ‘after_taus’ >> rw[] >>
+  metis_tac[after_taus_cases, reln_to_rel_def]
 QED
 
 (* example: compatibility can be used like so *)
-Theorem itree_coind_upto_taus:
-  !R.
-    rel_to_reln R SUBSET
-      rel_to_reln itree_wbisim UNION
-      wbisim_functional (upto_taus_func (rel_to_reln R) UNION
-                         rel_to_reln itree_wbisim)
-    ==> rel_to_reln R SUBSET rel_to_reln itree_wbisim
+Theorem itree_wbisim_coind_after_taus:
+  !R. R SUBSET
+        rel_to_reln itree_wbisim UNION
+        wbisim_functional (after_taus_func R UNION rel_to_reln itree_wbisim)
+    ==> R SUBSET rel_to_reln itree_wbisim
 Proof
   rw[] >>
   irule itree_wbisim_coind_upto' >>
@@ -1273,7 +1267,7 @@ Proof
   irule_at (Pos last) (cj 2 SUBSET_UNION) >>
   irule wbisim_functional_cancel >> rw[] >-
    (irule set_compatible_enhance >> rw[] >>
-    metis_tac[upto_taus_compatible, SUBSET_REFL]) >>
+    metis_tac[after_taus_compatible, SUBSET_REFL]) >>
   metis_tac[set_gfp_sub_companion, wbisim_functional_mono, wbisim_functional_gfp]
 QED
 
