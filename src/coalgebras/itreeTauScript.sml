@@ -1068,13 +1068,13 @@ Proof
     Cases_on ‘t1’ >>
     Cases_on ‘t2’ >-
      (fs[Once itree_wbisim_cases, itree_bind_thm] >>
-      Cases_on ‘k x’ >> rw[itree_wbisim_refl]) >-
-     (disj2_tac >> disj2_tac >> disj2_tac >>
+      rw[itree_wbisim_refl]) >-
+     (ntac 3 disj2_tac >>
       irule itree_wbisim_sym >>
       irule itree_bind_strip_tau_wbisim >>
       fs[Once itree_wbisim_cases]) >-
      (fs[Once itree_wbisim_cases]) >-
-     (disj2_tac >> disj2_tac >> disj2_tac >>
+     (ntac 3 disj2_tac >>
       irule itree_bind_strip_tau_wbisim >>
       fs[Once itree_wbisim_cases]) >-
      (rw[itree_bind_thm] >>
@@ -1115,14 +1115,12 @@ Theorem itree_iter_ret_tau_wbisim[local]:
   (?t2 t3.
      itree_bind (Ret x) itcb1 = Tau t2 /\ itree_bind (Tau u) itcb2 = Tau t3 /\
      ((?sa sb. itree_wbisim sa sb /\
-               t2 = itree_bind sa itcb1 /\ t3 = itree_bind sb itcb2)
-      \/ itree_wbisim t2 t3)) \/
+               t2 = itree_bind sa itcb1 /\ t3 = itree_bind sb itcb2))) \/
   (?e k k'.
      strip_tau (itree_bind (Ret x) itcb1) (Vis e k) /\
      strip_tau (itree_bind (Tau u) itcb2) (Vis e k') /\
      !r. (?sa sb. itree_wbisim sa sb /\
-                  k r = itree_bind sa itcb1 /\ k' r = itree_bind sb itcb2)
-         \/ itree_wbisim (k r) (k' r)) \/
+                  k r = itree_bind sa itcb1 /\ k' r = itree_bind sb itcb2)) \/
   ?r. strip_tau (itree_bind (Ret x) itcb1) (Ret r) /\
       strip_tau (itree_bind (Tau u) itcb2) (Ret r)
 Proof
@@ -1139,14 +1137,11 @@ Proof
    (disj1_tac >>
     metis_tac[itree_bind_thm,
               itree_wbisim_tau_eq, itree_wbisim_trans, itree_wbisim_sym]) >-
-   (disj1_tac >>
-    metis_tac[itree_wbisim_tau_eq, itree_wbisim_trans, itree_wbisim_sym]) >-
    (disj2_tac >> disj1_tac >> metis_tac[]) >-
    (disj2_tac >> disj2_tac >> metis_tac[]) >-
    (Cases_on ‘v’ >-
-     (qunabbrev_tac ‘itcb1’ >> qunabbrev_tac ‘itcb2’ >>
-      rw[] >>
-      disj1_tac >> disj1_tac >>
+     (qunabbrev_tac ‘itcb1’ >> qunabbrev_tac ‘itcb2’ >> rw[] >>
+      disj1_tac >>
       qexistsl_tac [‘k1 x’, ‘Tau (k2 x)’] >>
       simp[Once itree_iter_thm] >>
       simp[Once itree_iter_thm, itree_bind_thm] >>
@@ -1167,7 +1162,7 @@ Proof
   qspecl_then [‘λia ib. ?sa sb x. itree_wbisim sa sb /\
                                   ia = itree_bind sa itcb1 /\
                                   ib = itree_bind sb itcb2’]
-              strip_assume_tac itree_wbisim_strong_coind >>
+              strip_assume_tac itree_wbisim_coind >>
   pop_assum irule >>
   rw[] >-
    (Cases_on ‘sa’ >>
@@ -1229,7 +1224,7 @@ Definition after_taus_func_def:
 End
 
 Theorem in_after_taus_func:
-  (a,b) ∈ after_taus_func X ⇔ after_taus (λx y. (x,y) ∈ X) a b
+  (a,b) IN after_taus_func X <=> after_taus (λx y. (x,y) IN X) a b
 Proof
   rw[after_taus_func_def, in_rel_to_reln, reln_to_rel_def]
 QED
